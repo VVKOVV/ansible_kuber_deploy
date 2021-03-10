@@ -1,0 +1,40 @@
+---
+
+
+- name: "Create a master node"
+  shell: "kubeadm init --pod-network-cidr=192.168.0.0/16"
+  when: inventory_hostname == master_hostname
+
+
+- name: "Configure a network"
+  shell: "kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml"
+  environment:
+     KUBECONFIG: "/etc/kubernetes/admin.conf"
+  when: inventory_hostname == master_hostname
+
+
+- name: "Register a token"
+  shell: "kubeadm token create"
+  environment:
+     KUBECONFIG: "/etc/kubernetes/admin.conf"
+  register: kuber_token
+  when: inventory_hostname == master_hostname
+
+- set_fact:
+    kuber_token: "{{ kuber_token.stdout }}"
+    cacheable: yes
+  when: inventory_hostname == master_hostname
+
+
+- name: "Join to the kuber cluster"
+  shell: "kubeadm join $MASTER_HOST:6443 --token $KUBER_TOKEN --discovery-token-unsafe-skip-ca-verification"
+  environment:
+     KUBER_TOKEN: "{{ hostvars[master_hostname].ansible_facts.kuber_token }}"
+     MASTER_HOST: "{{ master_hostname }}"
+  when: inventory_hostname !=  master_hostname
+
+- name: "Deploy containers"
+  shell: "kubectl apply -f https://raw.githubusercontent.com/VVKOVV/kuber_dummy/main/kubernates_kafka.yuml"
+  environment:
+     KUBECONFIG: "/etc/kubernetes/admin.conf"
+  when: inventory_hostname == master_hostname

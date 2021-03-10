@@ -1,0 +1,7 @@
+kuber:
+  hosts:
+    alpha.lab.local:
+    beta.lab.local:
+    gamma.lab.local:
+  vars:
+    master_hostname: alpha.lab.local

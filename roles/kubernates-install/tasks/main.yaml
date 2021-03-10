@@ -1,0 +1,69 @@
+---
+
+- name: "Disable swap"
+  shell: "swapoff -a"
+
+#Workaround for instant time sync
+##Certificate issue is expected with a bad date
+##
+- name: "Sync a time"
+  service:
+    name: chronyd
+    state: stopped
+
+- shell: "chronyd -q"
+
+- service:
+    name: chronyd
+    state: started
+
+
+- name: "Update the yum repos."
+  copy:
+    src: "{{ item }}"
+    dest: /etc/yum.repos.d/
+    owner: root
+    group: root
+    mode: 0664
+  loop: "{{ yum_repos }}" 
+
+
+- name: "Installing packages."
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+
+
+- name: "Load a kernel modules."
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kernel_modules }}"
+
+- copy:
+    content: "{{item}}"
+    dest: /etc/modules-load.d/{{item}}.conf
+  loop: "{{ kernel_modules }}"
+
+- name: "Editing rc.local"
+  lineinfile:
+    path: /etc/rc.local
+    line: "{{ item }}"
+  loop: "{{ rc_local_records }}"
+
+- file:
+    path: /etc/rc.local
+    mode: '0774'
+  
+    
+
+- name: "Editing sysctl"
+  sysctl:
+    name: "{{ item }}"
+    value: '1'
+    state: present
+    sysctl_set: yes
+    reload: yes
+  loop: "{{ sysctl_records }}"
+

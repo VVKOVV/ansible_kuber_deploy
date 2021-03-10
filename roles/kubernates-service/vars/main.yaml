@@ -1,0 +1,9 @@
+---
+
+enabled_services:
+ - containerd
+ - kubelet
+ - rc-local
+
+started_services:
+ - containerd

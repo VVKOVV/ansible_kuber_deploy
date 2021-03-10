@@ -1,0 +1,21 @@
+---
+
+- name: "Configure containerd"
+  file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- shell: "containerd config default > /etc/containerd/config.toml"
+
+- name: "Enabled services"
+  service:
+    name: "{{ item }}"
+    enabled: yes
+  loop: "{{ enabled_services }}"
+
+- name: "Started services"
+  service:
+    name: "{{ item }}"
+    state: started
+  loop: "{{ started_services }}" 
