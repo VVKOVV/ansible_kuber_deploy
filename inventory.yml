@@ -5,3 +5,7 @@ kuber:
     gamma.lab.local:
   vars:
     master_hostname: alpha.lab.local
+
+helm:
+  hosts:
+    alpha.lab.local:

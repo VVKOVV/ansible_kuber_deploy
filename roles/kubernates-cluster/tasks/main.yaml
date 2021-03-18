@@ -2,9 +2,7 @@
 
 
 - name: "Create a master node"
-  shell: "IP=`grep $MASTER_HOST /etc/hosts | awk '{print $1}'`; kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=$IP"
-  environment:
-     MASTER_HOST: "{{ master_hostname }}"
+  shell: "kubeadm init --pod-network-cidr=192.168.0.0/16"
   when: inventory_hostname == master_hostname
 
 
@@ -30,6 +28,7 @@
 
 - name: "Join to the kuber cluster"
   shell: "kubeadm join $MASTER_HOST:6443 --token $KUBER_TOKEN --discovery-token-unsafe-skip-ca-verification"
+#  shell: "echo $MASTER_HOST:6443; echo $KUBER_TOKEN; exit 1"
   environment:
      KUBER_TOKEN: "{{ hostvars[master_hostname].ansible_facts.kuber_token }}"
      MASTER_HOST: "{{ master_hostname }}"

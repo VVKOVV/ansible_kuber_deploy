@@ -1,6 +1,6 @@
 ---
 
-packages: "['tc', 'kubelet-1.20.2-0.x86_64', 'kubeadm-1.20.2-0.x86_64', 'kubectl-1.20.2-0.x86_64', 'containerd.io-1.4.3-3.1.el8.x86_64']"
+packages: "['tc', 'tar', 'kubelet-1.20.2-0.x86_64', 'kubeadm-1.20.2-0.x86_64', 'kubectl-1.20.2-0.x86_64', 'containerd.io-1.4.3-3.1.el8.x86_64']"
 
 yum_repos:
  - Docker.repo

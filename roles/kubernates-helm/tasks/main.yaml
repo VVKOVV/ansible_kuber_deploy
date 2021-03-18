@@ -1,0 +1,52 @@
+---
+
+- name: "Install Helm"
+  shell: "curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash"
+  environment:
+     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/bin:/usr/local/bin"
+
+
+- name: "Add a repos."
+  shell: "helm repo add grafana https://grafana.github.io/helm-charts && 
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && 
+  helm repo update"
+  environment:
+     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/bin:/usr/local/bin"
+
+- name: "Install Prometheus with a Helm"
+  shell: "helm install dummy-prom  --set kubeStateMetrics.enabled=false,alertmanager.enabled=false,server.persistentVolume.enabled=false prometheus-community/prometheus"
+  environment:
+     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/bin:/usr/local/bin"
+     KUBECONFIG: "/etc/kubernetes/admin.conf"
+
+- name: "Copy and apply Prometheus ConfigMap"
+  copy:
+    src: prometheus_configmap.yaml
+    dest: /tmp/prometheus_configmap.yaml
+    owner: root
+    group: root
+    mode: 0664
+- shell: "kubectl replace -f /tmp/prometheus_configmap.yaml" 
+  environment:
+   PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/bin:/usr/local/bin"
+   KUBECONFIG: "/etc/kubernetes/admin.conf"
+
+- name: "Install Grafana with a Helm"
+  shell: |
+    helm install dummy-graf grafana/grafana --set service.type=NodePort,service.nodePort=30001 \
+    --set adminPassword="admin" \
+    --set datasources."datasources\.yaml".apiVersion=1 \
+    --set datasources."datasources\.yaml".datasources[0].name=Prometheus \
+    --set datasources."datasources\.yaml".datasources[0].type=prometheus \
+    --set datasources."datasources\.yaml".datasources[0].url=http://dummy-prom-prometheus-server:80 \
+    --set datasources."datasources\.yaml".datasources[0].access=proxy \
+    --set datasources."datasources\.yaml".datasources[0].isDefault=true \
+    --set dashboardProviders."dashboardproviders\.yaml".apiVersion=1 \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].name=default \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].orgId=1 \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].type=file \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].options.path=/var/lib/grafana/dashboards/default \
+    --set dashboards.default.default.url="https://raw.githubusercontent.com/VVKOVV/dummy_grafana/main/dashboard.json"
+  environment:
+     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/bin:/usr/local/bin"
+     KUBECONFIG: "/etc/kubernetes/admin.conf"

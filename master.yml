@@ -6,3 +6,6 @@
    - kubernates-install
    - kubernates-service
    - kubernates-cluster
+- hosts: helm
+  roles:
+    - kubernates-helm
